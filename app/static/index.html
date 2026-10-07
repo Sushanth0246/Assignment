@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bulk Certificate Generator</title>
+    <style>
+      :root {
+        --bg: #f3f6fb;
+        --panel: #ffffff;
+        --line: #dfe7f3;
+        --text: #1f2937;
+        --muted: #5b6b82;
+        --primary: #2f6fed;
+        --primary-soft: #eaf1ff;
+        --success: #1d8f5f;
+        --warning: #c77a00;
+        --danger: #c0392b;
+        --shadow: 0 10px 30px rgba(31, 41, 55, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 32px 20px 60px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 2rem;
+      }
+
+      .subtitle {
+        margin: 0 0 26px;
+        color: var(--muted);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1.1fr 1.5fr;
+        gap: 24px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+      }
+
+      label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      input, textarea {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 11px 12px;
+        font-size: 1rem;
+        margin-bottom: 16px;
+        background: white;
+      }
+
+      textarea {
+        min-height: 180px;
+        resize: vertical;
+      }
+
+      button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 18px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:hover { opacity: 0.96; }
+
+      .result-box {
+        margin-top: 20px;
+        border: 1px solid var(--line);
+        background: #fafcff;
+        border-radius: 12px;
+        padding: 16px;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-right: 8px;
+        margin-bottom: 10px;
+      }
+
+      .status-pending { background: #fff5d6; color: var(--warning); }
+      .status-processing { background: #eaf1ff; color: var(--primary); }
+      .status-completed { background: #eafaf3; color: var(--success); }
+      .status-completed_with_errors { background: #fff0e6; color: #b76600; }
+      .status-failed { background: #fdeaea; color: var(--danger); }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(110px, 1fr));
+        gap: 12px;
+        margin: 20px 0;
+      }
+
+      .stat-card {
+        background: var(--primary-soft);
+        border: 1px solid #dfe8ff;
+        border-radius: 12px;
+        padding: 14px 12px;
+      }
+
+      .stat-card .label {
+        font-size: 0.74rem;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .stat-card .value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 14px;
+        background: #edf2fb;
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 14px 0 18px;
+      }
+
+      .progress-fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--primary), #4ca3ff);
+        transition: width 0.3s ease;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+      }
+
+      th, td {
+        text-align: left;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+
+      th {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .download-btn {
+        display: inline-block;
+        margin-top: 6px;
+        background: var(--success);
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 0.85rem;
+      }
+
+      .empty {
+        color: var(--muted);
+        padding: 10px 0;
+      }
+
+      .hidden { display: none; }
+
+      @media (max-width: 860px) {
+        .layout { grid-template-columns: 1fr; }
+        .stats { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Bulk Certificate Generator</h1>
+      <p class="subtitle">
+        This dashboard shows the real lifecycle of a bulk certificate job: submit → validate → process → status → download.
+      </p>
+
+      <div class="layout">
+        <section class="panel">
+          <form id="jobForm">
+            <div>
+              <label for="certificate_title">Certificate title</label>
+              <input id="certificate_title" name="certificate_title" value="Certificate of Completion" required />
+            </div>
+
+            <div>
+              <label for="course_name">Course name</label>
+              <input id="course_name" name="course_name" value="Python Fundamentals" required />
+            </div>
+
+            <div>
+              <label for="issue_date">Issue date</label>
+              <input id="issue_date" name="issue_date" type="date" required />
+            </div>
+
+            <div>
+              <label for="recipients">Recipients</label>
+              <textarea id="recipients" required>John Doe, john@example.com
+Jane Smith, jane@example.com
+Alex Brown, alex@example.com</textarea>
+            </div>
+
+            <button type="submit">Submit bulk job</button>
+          </form>
+
+          <div id="jobResponse" class="result-box hidden"></div>
+        </section>
+
+        <section class="panel">
+          <div id="statusPanel" class="hidden">
+            <div id="jobHeader"></div>
+
+            <div class="stats" id="stats"></div>
+
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div id="certificates"></div>
+          </div>
+
+          <div id="emptyState" class="empty">No job selected yet. Submit a request on the left to see the processing flow.</div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('jobForm');
+      const jobResponse = document.getElementById('jobResponse');
+      const statusPanel = document.getElementById('statusPanel');
+      const emptyState = document.getElementById('emptyState');
+      const jobHeader = document.getElementById('jobHeader');
+      const stats = document.getElementById('stats');
+      const certificates = document.getElementById('certificates');
+      const progressFill = document.getElementById('progressFill');
+
+      let currentJobId = null;
+      let pollTimer = null;
+
+      function setDateToday() {
+        const date = new Date();
+        const offset = date.getTimezoneOffset();
+        const localDate = new Date(date.getTime() - offset * 60000);
+        document.getElementById('issue_date').value = localDate.toISOString().split('T')[0];
+      }
+
+      function parseRecipients(rawText) {
+        const lines = rawText.split(/\n|;/).map(line => line.trim()).filter(Boolean);
+        return lines.map((line) => {
+          const [namePart, emailPart] = line.split(',').map(part => part.trim());
+          if (!namePart || !emailPart) {
+            throw new Error(`Invalid recipient row: "${line}". Use: Name, email@example.com`);
+          }
+          return { name: namePart, email: emailPart };
+        });
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function renderStatus(job) {
+        const total = job.total || 0;
+        const succeeded = job.succeeded || 0;
+        const failed = job.failed || 0;
+        const pending = job.pending || 0;
+        const percent = job.progress_percent || 0;
+
+        const statusClass = `status-${job.status}`;
+        jobHeader.innerHTML = `
+          <h2>Job: ${escapeHtml(job.job_id)}</h2>
+          <div>
+            <span class="pill ${statusClass}">${escapeHtml(job.status)}</span>
+            <span class="pill">${escapeHtml(job.certificate_title)}</span>
+            <span class="pill">${escapeHtml(job.course_name)}</span>
+          </div>
+        `;
+
+        stats.innerHTML = `
+          <div class="stat-card"><div class="label">Total</div><div class="value">${total}</div></div>
+          <div class="stat-card"><div class="label">Succeeded</div><div class="value">${succeeded}</div></div>
+          <div class="stat-card"><div class="label">Failed</div><div class="value">${failed}</div></div>
+          <div class="stat-card"><div class="label">Pending</div><div class="value">${pending}</div></div>
+        `;
+
+        progressFill.style.width = `${Math.min(percent, 100)}%`;
+
+        if (!job.certificates || job.certificates.length === 0) {
+          certificates.innerHTML = '<div class="empty">No certificate rows have been created yet.</div>';
+          return;
+        }
+
+        certificates.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Download</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${job.certificates.map((cert) => `
+                <tr>
+                  <td>${cert.index}</td>
+                  <td>${escapeHtml(cert.recipient_name || '')}</td>
+                  <td>${escapeHtml(cert.recipient_email || '')}</td>
+                  <td><span class="pill status-${cert.status}">${escapeHtml(cert.status)}</span></td>
+                  <td>
+                    ${cert.download_url ? `<a class="download-btn" href="${cert.download_url}" target="_blank" rel="noreferrer">PDF</a>` : (cert.status === 'success' ? 'Ready' : '-')}
+                    ${cert.error_message ? `<div style="color:#c0392b; margin-top: 6px;">${escapeHtml(cert.error_message)}</div>` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+
+        if (job.download_all_url) {
+          const zipBtn = document.createElement('a');
+          zipBtn.href = job.download_all_url;
+          zipBtn.target = '_blank';
+          zipBtn.rel = 'noreferrer';
+          zipBtn.className = 'download-btn';
+          zipBtn.style.marginTop = '16px';
+          zipBtn.textContent = 'Download all certificates (.zip)';
+          certificates.appendChild(zipBtn);
+        }
+      }
+
+      function showJob(jobId) {
+        currentJobId = jobId;
+        statusPanel.classList.remove('hidden');
+        emptyState.classList.add('hidden');
+
+        fetch(`/jobs/${jobId}`)
+          .then((response) => response.json())
+          .then((job) => {
+            renderStatus(job);
+            if (job.status === 'pending' || job.status === 'processing') {
+              if (!pollTimer) {
+                pollTimer = setInterval(() => showJob(jobId), 2000);
+              }
+            } else {
+              if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+              }
+            }
+          })
+          .catch((error) => {
+            jobHeader.innerHTML = '<h2>Unable to load job</h2>';
+            console.error(error);
+          });
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        try {
+          const recipients = parseRecipients(document.getElementById('recipients').value);
+          const payload = {
+            certificate_title: document.getElementById('certificate_title').value,
+            course_name: document.getElementById('course_name').value,
+            issue_date: document.getElementById('issue_date').value,
+            recipients,
+          };
+
+          const response = await fetch('/jobs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.detail || 'Job submission failed');
+          }
+
+          jobResponse.classList.remove('hidden');
+          jobResponse.innerHTML = `
+            <strong>Job submitted successfully.</strong><br />
+            Job ID: <code>${escapeHtml(result.job_id)}</code><br />
+            Status: <strong>${escapeHtml(result.status)}</strong><br />
+            Total recipients: ${result.total}<br />
+            Rejected at submission: ${result.rejected_at_submission}<br />
+            <a href="${result.status_url}" target="_blank" rel="noreferrer">Open job status URL</a>
+          `;
+
+          showJob(result.job_id);
+        } catch (error) {
+          jobResponse.classList.remove('hidden');
+          jobResponse.innerHTML = `<strong style="color:#c0392b;">Submission error:</strong><br>${escapeHtml(error.message)}`;
+        }
+      });
+
+      setDateToday();
+    </script>
+  </body>
+</html>

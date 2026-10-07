@@ -1,0 +1,10 @@
+{
+  "certificate_title": "Certificate of Completion",
+  "course_name": "Introduction to Python",
+  "issue_date": "2026-10-07",
+  "recipients": [
+    {"name": "Asha Rao", "email": "asha@example.com"},
+    {"name": "Rahul Verma", "email": "rahul@example.com"},
+    {"name": "", "email": "not-an-email"}
+  ]
+}
